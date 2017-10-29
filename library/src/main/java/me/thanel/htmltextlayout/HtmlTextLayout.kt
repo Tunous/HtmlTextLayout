@@ -7,7 +7,6 @@ import android.support.v4.view.GravityCompat
 import android.support.v4.view.ViewCompat
 import android.support.v7.widget.AppCompatTextView
 import android.support.v7.widget.LinearLayoutCompat
-import android.text.Html
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.ViewGroup
@@ -15,6 +14,9 @@ import android.widget.HorizontalScrollView
 import android.widget.TableLayout
 import android.widget.TableRow
 import android.widget.TextView
+import me.thanel.htmltextlayout.block.HtmlLayoutBlock
+import me.thanel.htmltextlayout.block.HtmlLayoutBlockHandler
+import me.thanel.htmltextlayout.html.Html
 import org.jsoup.Jsoup
 
 class HtmlTextLayout : LinearLayoutCompat {
@@ -54,11 +56,9 @@ class HtmlTextLayout : LinearLayoutCompat {
     }
 
     private fun ViewGroup.addTextView(htmlText: String, body: TextView.() -> Unit = {}) {
-        val parsedText = Html.fromHtml(htmlText)
-        // Remove trailing new lines in a way which preserves spans
-        val trimmedText = parsedText.dropLastWhile { it == '\n' }
+        val parsedText = Html.fromHtml(context, htmlText, null)
         val textView = AppCompatTextView(context).apply {
-            text = trimmedText
+            text = parsedText
             setTextIsSelectable(true)
             body()
         }

@@ -2,4 +2,9 @@
 <resources>
     <dimen name="table_column_padding">8dp</dimen>
     <dimen name="table_vertical_margin">16dp</dimen>
+
+    <dimen name="reply_span_size">2dp</dimen>
+    <dimen name="reply_span_margin">10dp</dimen>
+    <dimen name="bullet_span_margin">6dp</dimen>
+    <dimen name="divider_span_height">1dp</dimen>
 </resources>

@@ -1,6 +1,6 @@
-package me.thanel.htmltextlayout
+package me.thanel.htmltextlayout.block
 
-sealed class HtmlLayoutBlock(val text: String) {
+internal sealed class HtmlLayoutBlock(val text: String) {
     class RegularLayoutBlock(text: String) : HtmlLayoutBlock(text)
 
     class TableLayoutBlock(text: String) : HtmlLayoutBlock(text)

@@ -1,8 +1,8 @@
-package me.thanel.htmltextlayout
+package me.thanel.htmltextlayout.block
 
 import org.jsoup.Jsoup
 
-object HtmlLayoutBlockHandler {
+internal object HtmlLayoutBlockHandler {
     fun parseHtmlLayoutBlocks(htmlText: String): List<HtmlLayoutBlock> {
         val body = Jsoup.parse(htmlText).body()
         val textBlocks = mutableListOf<HtmlLayoutBlock>()
@@ -16,7 +16,8 @@ object HtmlLayoutBlockHandler {
 
             if (blockText.isNotEmpty()) {
                 textBlocks.add(
-                        HtmlLayoutBlock.RegularLayoutBlock(blockText))
+                        HtmlLayoutBlock.RegularLayoutBlock(
+                                blockText))
                 blockText = ""
             }
 
@@ -28,12 +29,14 @@ object HtmlLayoutBlockHandler {
                 // preformatted text blocks
                 val outerHtml = child.outerHtml().replace("\n", "<br/>")
                 textBlocks.add(
-                        HtmlLayoutBlock.PreformattedLayoutBlock(outerHtml))
+                        HtmlLayoutBlock.PreformattedLayoutBlock(
+                                outerHtml))
             }
         }
 
         if (blockText.isNotEmpty()) {
-            textBlocks.add(HtmlLayoutBlock.RegularLayoutBlock(blockText))
+            textBlocks.add(
+                    HtmlLayoutBlock.RegularLayoutBlock(blockText))
         }
 
         return textBlocks
