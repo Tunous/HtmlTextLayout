@@ -147,7 +147,17 @@ internal class HtmlToSpannedConverter(
                 spannableStringBuilder.setSpan(span, spannableStringBuilder.length - 2,
                         spannableStringBuilder.length - 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
-            "div" -> startBlockElement(spannableStringBuilder, attributes)
+            "div" -> {
+                startBlockElement(spannableStringBuilder, attributes)
+                val cssClass = attributes.getValue("", "class")
+                if (cssClass != null && cssClass.indexOf("highlight") == 0) {
+                    start(spannableStringBuilder, CodeDiv())
+                }
+                val code = getLast(spannableStringBuilder, CodeDiv::class.java)
+                if (code != null) {
+                    code.level += 1
+                }
+            }
             "span" -> startCssStyle(spannableStringBuilder, attributes)
             "hr" -> {
                 val span = HorizontalLineSpan(dividerHeight, 0x60aaaaaa)
@@ -169,6 +179,13 @@ internal class HtmlToSpannedConverter(
             "font" -> startFont(spannableStringBuilder, attributes)
             "blockquote" -> startBlockquote(spannableStringBuilder, attributes)
             "tt" -> start(spannableStringBuilder, Monospace())
+            "pre" -> {
+                start(spannableStringBuilder, Pre())
+                val div = getLast(spannableStringBuilder, CodeDiv::class.java)
+                if (div != null) {
+                    div.hasPre = true
+                }
+            }
             "a" -> startA(spannableStringBuilder, attributes)
             "u" -> start(spannableStringBuilder, Underline())
             "del" -> start(spannableStringBuilder, Strikethrough())
@@ -176,6 +193,13 @@ internal class HtmlToSpannedConverter(
             "strike" -> start(spannableStringBuilder, Strikethrough())
             "sup" -> start(spannableStringBuilder, Super())
             "sub" -> start(spannableStringBuilder, Sub())
+            "code" -> {
+                val inPre = getLast(spannableStringBuilder, Pre::class.java) != null
+                if (inPre) {
+                    appendNewlines(spannableStringBuilder, 1)
+                }
+                start(spannableStringBuilder, Code(inPre))
+            }
             "img" -> startImg(spannableStringBuilder, attributes, imageGetter)
         }
 
@@ -202,7 +226,16 @@ internal class HtmlToSpannedConverter(
                 end(spannableStringBuilder, List::class.java, null)
             }
             "li" -> endLi(spannableStringBuilder)
-            "div" -> endBlockElement(spannableStringBuilder)
+            "div" -> {
+                endBlockElement(spannableStringBuilder)
+                val code = getLast(spannableStringBuilder, CodeDiv::class.java)
+                if (code != null) {
+                    code.level -= 1
+                    if (code.level == 0) {
+                        spannableStringBuilder.removeSpan(code)
+                    }
+                }
+            }
             "span" -> endCssStyle(spannableStringBuilder)
             "strong" -> end(spannableStringBuilder, Bold::class.java, StyleSpan(Typeface.BOLD))
             "b" -> end(spannableStringBuilder, Bold::class.java, StyleSpan(Typeface.BOLD))
@@ -215,6 +248,7 @@ internal class HtmlToSpannedConverter(
             "font" -> endFont(spannableStringBuilder)
             "blockquote" -> endBlockquote(spannableStringBuilder)
             "tt" -> end(spannableStringBuilder, Monospace::class.java, TypefaceSpan("monospace"))
+            "pre" -> end(spannableStringBuilder, Pre::class.java, TypefaceSpan("monospace"))
             "a" -> endA(spannableStringBuilder)
             "u" -> end(spannableStringBuilder, Underline::class.java, UnderlineSpan())
             "del" -> end(spannableStringBuilder, Strikethrough::class.java, StrikethroughSpan())
@@ -225,7 +259,7 @@ internal class HtmlToSpannedConverter(
             "code" -> {
                 val code = getLast(spannableStringBuilder, Code::class.java)
                 if (code != null) {
-                    val backgroundSpan = BackgroundColorSpan(0x30aaaaaa)
+                    val backgroundSpan = if (!code.inPre) BackgroundColorSpan(0x30aaaaaa) else null
                     setSpanFromMark(spannableStringBuilder, code,
                             TypefaceSpan("monospace"), backgroundSpan)
                 }
@@ -408,10 +442,16 @@ internal class HtmlToSpannedConverter(
     private class Blockquote
     private class Super
     private class Sub
+    private class Pre
+
+    private class CodeDiv {
+        var hasPre = false
+        var level = 0
+    }
 
     private class NeedsReversingSpan(val mActualSpan: Any)
 
-    private class Code
+    private class Code(val inPre: Boolean)
 
     private class List {
         val mOrdered: Boolean
